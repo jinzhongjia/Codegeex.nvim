@@ -17,9 +17,9 @@ end
 ---Return LSP's PositionEncodingKind.
 -- -@NOTE: If this method is ommited, the default value will be `utf-16`.
 -- -@return lsp.PositionEncodingKind
-function source:get_position_encoding_kind()
-	return "utf-16"
-end
+-- function source:get_position_encoding_kind()
+-- 	return "utf-16"
+-- end
 
 ---Return the keyword pattern for triggering completion (optional).
 ---If this is ommited, nvim-cmp will use a default keyword pattern. See |cmp-config.completion.keyword_pattern|.
@@ -30,8 +30,19 @@ end
 
 ---Return trigger characters for triggering completion (optional).
 -- function source:get_trigger_characters()
--- 	return { "." }
+-- 	return { "*" }
 -- end
+
+local function filter(content)
+	local contents = vim.split(content, "\n")
+	for _, val in pairs(contents) do
+		if string.gsub(val, " ", "") ~= "" then
+			return true
+		end
+	end
+
+	return false
+end
 
 ---Invoke completion (required).
 -- -@param params cmp.SourceCompletionApiParams
@@ -43,34 +54,41 @@ function source:complete(params, callback)
 	local bufnr = context.bufnr
 	local filetype = context.filetype or "text"
 
-	local codes = vim.api.nvim_buf_get_text(bufnr, 1, 1, cursor.line, cursor.character,{})
+	local input = string.sub(params.context.cursor_before_line, params.offset - 1)
+	local prefix = string.sub(params.context.cursor_before_line, 1, params.offset - 1)
+
+	local codes = vim.api.nvim_buf_get_text(bufnr, 0, 0, cursor.line, cursor.character, {})
 
 	local lang = lib.util.filetype_to_lang(filetype)
 
 	if lang == nil then
 		return
 	end
-    request.request(codes, lang, function(prompts)
-		local list = {{ label = 'January' },}
-        for _, val in pairs(prompts) do
+	request.request(codes, lang, function(prompts)
+		local list = {}
+		-- lib.util.debug(prompts)
+		for _, val in pairs(prompts) do
 			-- this logic must be rewrited!!!!
-			table.insert(list, {
-				-- code
-				type = 1,
-				detail = val, --here is code
-				-- this is header
-				-- documentation = "January+documentation",
-				-- this is body
-				label = val,
-				-- this is lable
-				insertText = val,
-				-- this inserttext
-				cmp = {
-					kind_text = "Suggestion",
-					-- this is for kind_text
-				},
-			})
-        end
+			if filter(val) then
+				table.insert(list, {
+					-- code
+					filterText = lib.util.get_label(params.context.cursor_before_line),
+					-- type = 1,
+					detail = val, --here is code
+					-- this is header
+					-- documentation = "January+documentation",
+					-- this is body
+					label = lib.util.get_label(val),
+					-- this is lable
+					insertText = val,
+					-- this inserttext
+					cmp = {
+						kind_text = "Suggestion",
+						-- this is for kind_text
+					},
+				})
+			end
+		end
 		callback(list)
 	end)
 end
@@ -93,7 +111,7 @@ end
 local M = {}
 
 M.init = function()
-    ---Register your source to nvim-cmp.
+	---Register your source to nvim-cmp.
 	require("cmp").register_source("Codegeex", source)
 end
 

@@ -17,4 +17,19 @@ M.filetype_to_lang = function(filetype)
 	return emun.fileType[filetype] or nil
 end
 
+M.get_label = function(content)
+	local contents = vim.split(content, "\n")
+	for key, value in pairs(contents) do
+		if string.gsub(value, " ", "") ~= "" then
+			return M.ltrim(value)
+		end
+    end
+	return ""
+end
+
+-- trim whitespace from heading and trailing
+M.ltrim = function(str)
+	return string.match(str, "^%s*(.*)")
+end
+
 return M

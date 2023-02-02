@@ -4,8 +4,8 @@ M.options = {
 	debug = false,
 	server = {
 		url = "https://tianqi.aminer.cn/api/v2/multilingual_code_generate",
-		apikey = "68cf004321e94b47a91c2e45a8109852",
-		apisecret = "e82b86a16f9d471ab215f653060310e3",
+		apikey = "",
+		apisecret = "",
 		num = 5,
 	},
 }
